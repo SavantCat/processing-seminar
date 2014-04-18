@@ -63,7 +63,6 @@ void sobel(PImage F, PImage G, int m)
     for(int x=m; x<F.width-m; x++) { 
       int r=0,g=0,b=0;
       int r_ave=0,g_ave=0,b_ave=0;
-      int c=0;
       for(int i=-1; i<=1; i++){
         for(int j=-1; j<=1; j++){
           r += (  red(F.get(x+j,y+i)) * matrix[j+1][i+1]);
