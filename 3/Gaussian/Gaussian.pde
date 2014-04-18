@@ -5,30 +5,42 @@ float[][] matrix = {{-1, 0, 1},
                     {-1, 0, 1} };
  
 float[][] myMatrix;
-int       large=5;
-float     sigma = 2.0; 
+int       large=7;
+float     sigma = 1.0; 
  
 int offest = 20;
+ 
+int max,min,tmp; 
  
 void setup() {
   a = loadImage("../../img/lenna.png");
   b = a.get(0,0,a.width,a.height);
   
-  size(2*a.width,a.height);
+  size(3*a.width,a.height);
   background(255);
   
   MovingAverageFilter(a,b,1);
   
-  c = b.get(0,0,b.width,b.height);//pixels 
-  
-  sobel(b,c,1);
-  
+  c = a.get(0,0,a.width,a.height);//pixels 
+  gaussian_filter(a,c,1);
+   
   image(a, 0, 0);
-  image(c, b.width, 0);
+  image(b, a.width, 0);
+  image(c, a.width + b.width, 0);
 }
  
 void draw() {
+
+  if(sigma > 10){
+    sigma = 1.0;
+  }else{
+    sigma += 0.1;
+  }
  
+ c = a.get(0,0,a.width,a.height);//pixels 
+ gaussian_filter(b,c,1);
+ image(c, a.width + b.width, 0);
+// test(sigma,10,10);
 }
  
 int grey(color c){
@@ -63,6 +75,7 @@ void sobel(PImage F, PImage G, int m)
     for(int x=m; x<F.width-m; x++) { 
       int r=0,g=0,b=0;
       int r_ave=0,g_ave=0,b_ave=0;
+      int c=0;
       for(int i=-1; i<=1; i++){
         for(int j=-1; j<=1; j++){
           r += (  red(F.get(x+j,y+i)) * matrix[j+1][i+1]);
@@ -80,16 +93,17 @@ void sobel(PImage F, PImage G, int m)
 
 void gaussian_filter(PImage F, PImage G, int m)
 {
+  make_gaussian();
   for(int y=m; y<F.height-m; y++) {
     for(int x=m; x<F.width-m; x++) { 
       int r=0,g=0,b=0;
       int r_ave=0,g_ave=0,b_ave=0;
       int c=0;
-      for(int i=-4; i<=4; i++){
-        for(int j=-4; j<=4; j++){
-          r += (  red(F.get(x+j,y+i)) * mymatrix[j+1][i+1]);
-          g += (green(F.get(x+j,y+i)) * mymatrix[j+1][i+1]);
-          b += ( blue(F.get(x+j,y+i)) * mymatrix[j+1][i+1]);
+      for(int i=-2; i<=2; i++){
+        for(int j=-2; j<=2; j++){
+          r += (  red(F.get(x+j,y+i)) * myMatrix[j+2][i+2]);
+          g += (green(F.get(x+j,y+i)) * myMatrix[j+2][i+2]);
+          b += ( blue(F.get(x+j,y+i)) * myMatrix[j+2][i+2]);
         }
       }
      // r_ave = (r - r/9)+offest;
@@ -100,7 +114,7 @@ void gaussian_filter(PImage F, PImage G, int m)
   }
 }
 
-void gaussian(){
+void make_gaussian(){
   myMatrix = new float[large][large];
   for(int y=0; y<large; y++){
     for(int x=0; x<large; x++){
@@ -110,5 +124,18 @@ void gaussian(){
       myMatrix[y][x] = G;
     }
   }
+  for(int y=0; y<large; y++){
+      println("[" + myMatrix[y][0] + "] [" + myMatrix[y][1] + "] [" +myMatrix[y][2] + "] [" + myMatrix[y][3] + "] [" + myMatrix[y][4] + "]");
+  }
 }
 
+void node(int n){
+  tmp = n;
+  
+  if(max < tmp){
+    max = tmp;
+  }
+  if(min > tmp){
+    min = tmp;
+  }  
+}
