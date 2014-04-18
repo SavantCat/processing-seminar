@@ -4,6 +4,10 @@ float[][] matrix = {{-1, 0, 1},
                     {-2, 0, 2},
                     {-1, 0, 1} };
  
+float[][] myMatrix;
+int       large=5;
+float     sigma = 2.0; 
+ 
 int offest = 20;
  
 void setup() {
@@ -74,3 +78,38 @@ void sobel(PImage F, PImage G, int m)
     }
   }
 }
+
+void gaussian_filter(PImage F, PImage G, int m)
+{
+  for(int y=m; y<F.height-m; y++) {
+    for(int x=m; x<F.width-m; x++) { 
+      int r=0,g=0,b=0;
+      int r_ave=0,g_ave=0,b_ave=0;
+      int c=0;
+      for(int i=-4; i<=4; i++){
+        for(int j=-4; j<=4; j++){
+          r += (  red(F.get(x+j,y+i)) * mymatrix[j+1][i+1]);
+          g += (green(F.get(x+j,y+i)) * mymatrix[j+1][i+1]);
+          b += ( blue(F.get(x+j,y+i)) * mymatrix[j+1][i+1]);
+        }
+      }
+     // r_ave = (r - r/9)+offest;
+     // g_ave = (g - g/9)+offest;
+     // b_ave = (b - b/9)+offest;
+      G.set(x,y,color(r,g,b));
+    }
+  }
+}
+
+void gaussian(){
+  myMatrix = new float[large][large];
+  for(int y=0; y<large; y++){
+    for(int x=0; x<large; x++){
+      int  center = floor(large/2.0);
+      float G;
+      G = 1.0/(2*PI*pow(sigma,2)) * exp(-1 * ( (pow(x-center,2) + pow(y-center,2) ) / (2*pow(sigma,2)) ) );
+      myMatrix[y][x] = G;
+    }
+  }
+}
+
