@@ -7,7 +7,7 @@ PImage[] r = new PImage[5];
   // Gaussian matrix
   float[][] myMatrix;
   int       large=9;
-  float     sigma=2;
+  float     sigma=2.0;
   
 void setup() {
   // Load image
@@ -53,13 +53,19 @@ void setup() {
       }
     }
   }
-  for(int i=1;i<3;i++){
-    check_DoG(r[i-1],d[i-1],d[i],d[i+1]);
-  }
-   
-  image(b[0], 0, 0);
+    //smooth();
+  noFill();
+  strokeWeight(1);
+  stroke(255);
+  //check_DoG(r[0],d);
+  image(a, 0, 0);
+ 
   image(d[1], a.width, 0);
+ // make_circle(r[0],0, 0);
   image(d[0], 0, a.height);
+   //
+  check_DoG(r[0],d);
+ // make_circle(r[0],a.width, a.height);
   image(r[0], a.width, a.height);
 }
  
@@ -150,47 +156,87 @@ void SmoothWithGaussian(PImage in, PImage out, int m, float[][] Gauss)
 
 int max;
 
-void check_DoG(PImage r,PImage a,PImage b,PImage c){
+void check_DoG(PImage r,PImage[] b){
   int m = 1;
-    for(int y=m; y<a.height-m; y++) {
-    for(int x=m; x<a.width-m; x++) {
-      int X = 0,Y = 0;
-      color p = b.get(x,y);
-      color tmp = p;
-      for(int i=-1; i<2; i++){
-        for(int j=-1; j<2; j++){
-           if(tmp < a.get(x+j,y+i)){
-             tmp =a.get(x+j,y+i);
-             X = x+j;
-             Y = y+i;
-           }
-           if(tmp < b.get(x+j,y+i)){
-             tmp =b.get(x+j,y+i);
-             X = x+j;
-             Y = y+i;
-           }
-           if(tmp < c.get(x+j,y+i)){
-             tmp =c.get(x+j,y+i);
-             X = x+j;
-             Y = y+i;
-           }
+  PImage[] s = new PImage[4];
+  
+  for(int i=0;i<4;i++) s[i] = r.get(0,0,r.width,r.height);  
+    
+  color tmp;
+  int max = 0;
+    for(int y=0; y<b[0].height; y++) {
+      for(int x=0; x<b[0].width; x++) {
+        tmp = b[0].get(x,y);
+        max = 0;
+        for(int i=1;i<4;i++){
+          if(tmp < b[i].get(x,y)){
+             tmp = b[i].get(x,y);
+             max = i;
+          }
+        }
+        s[max].set(x,y,tmp);
+      }
+    }
+    
+    //image(s[0], a.width, a.height);
+
+    for(int Num=0;Num<2;Num++){
+      for(int y=m; y<a.height-m; y++) {
+        for(int x=m; x<a.width-m; x++) {
+          int f = 0;
+          color p = s[Num+1].get(x,y);
+          for(int i=-1; i<2  && f==0; i++){
+            for(int j=-1; j<2 && f==0; j++){
+              for(int n=0; n<3 && f==0; n++){
+               if(p >= b[n+Num].get(x+j,y+i)){
+                  f = 1;
+                  //
+               }
+              }
+            }
+          }
+          if(f == 0){    
+             if(Num == 0){
+               r.set(x,y,color(255,0,0));
+               ellipse(x,y,5,5);
+               point(x,y);
+             }else{
+               r.set(x,y,color(0,255,0));
+               ellipse(x,y,20,20);
+               point(x,y);
+             }
+          }
+          
         }
       }
-      
-      r.set(X,Y,tmp);
-      
+    }
+    
+}
+
+void make_circle(PImage r,int x_offset,int y_offset){
+  smooth();
+  noFill();
+  //stroke(255);
+  for(int y=0; y<r.height; y++) {
+    for(int x=0; x<r.width; x++) {
+      if(red(r.get(x,y)) == 255){
+        ellipse(x+x_offset,y+y_offset,0.1,0.1);
+        point(x+x_offset,y+y_offset);
+      }else{
+        ellipse(x+x_offset,y+y_offset,0.5,0.5);
+        point(x+x_offset,y+y_offset);
+      }
     }
   }
 }
 
-
 void DoG(PImage r,PImage a,PImage b){
   color tmp;
     for(int y=0;y<a.height;y++){
-    for(int x=0;x<a.width;x++){
-      tmp = b.get(x,y) - a.get(x,y);
-     // println(red(tmp) + " " + blue(tmp) + " " + green(tmp));
-      r.set(x,y,tmp);
-    }
+      for(int x=0;x<a.width;x++){
+        tmp = a.get(x,y) - b.get(x,y);
+       // println(red(tmp) + " " + blue(tmp) + " " + green(tmp));
+        r.set(x,y,tmp);
+      }
   }
 }
