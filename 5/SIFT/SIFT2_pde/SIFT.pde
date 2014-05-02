@@ -6,7 +6,7 @@ PImage[] r = new PImage[5];
 
   // Gaussian matrix
   float[][] myMatrix;
-  int       large=10;
+  int       large=9;
   float     sigma=2;
   
 void setup() {
@@ -49,7 +49,7 @@ void setup() {
       r[n] = b[0].get(0,0,b[0].width,b[0].height);
       for(int i=0; i<b[0].height; i++){
       for(int j=0; j<b[0].width; j++){
-        r[n].set(x,y,color(0));
+        r[n].set(j,i,color(0));
       }
     }
   }
