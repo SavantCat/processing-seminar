@@ -9,11 +9,13 @@ float     sigma=2.0;
  
 int x_size,y_size;
 
+String name = "hand.jpg";
+
 /*----------------------------------------------------------------*/
 
 void setup() {
   // Load image
-  origin = loadImage("../../../img/lena.png");
+  origin = loadImage("../../../img/"+name);
   x_size = origin.width;
   y_size = origin.height;
   
@@ -58,7 +60,7 @@ void setup() {
   image(origin, 0, 0);
   check_DoG(r,d);
   //Save Result image.
-  save( "keypoints.png" );
+  save( name+"keypoints.png" );
   //image(d[1], x_size, 0);
   //image(d[2], 0, y_size);
   //image(r, x_size, y_size);
