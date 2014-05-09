@@ -1,3 +1,5 @@
+/*KEYPOINT*/
+
 PImage origin;
 PImage[] b = new PImage[5];
 PImage[] d = new PImage[4];
@@ -9,8 +11,12 @@ float     sigma=2.0;
  
 int x_size,y_size;
 
-String name = "hand.jpg";
-
+/*option*/
+String name = "lena.png";
+color sigma_1 = color(255,0,0,70);
+color sigma_2 = color(0,255,0,70);
+int scale_1 = 5;
+int scale_2 = 10;
 /*----------------------------------------------------------------*/
 
 void setup() {
@@ -20,8 +26,8 @@ void setup() {
   y_size = origin.height;
   
   // Set canvas
-  //size(2*x_size,2*y_size);
-  size(x_size,y_size);
+  size(2*x_size,2*y_size);
+  //size(x_size,y_size);
   noFill();
   strokeWeight(1);
   
@@ -44,7 +50,7 @@ void setup() {
   
   // Set DoG
   for(int i=0;i<d.length;i++){//d = b[0] - b[1]
-     DoG(d[i],b[i],b[i+1]);
+     make_DoG(d[i],b[i],b[i+1]);
   }
  
    
@@ -58,12 +64,13 @@ void setup() {
   */
   
   image(origin, 0, 0);
-  check_DoG(r,d);
+  keypoint(r,d);
+  make_scale(r);
   //Save Result image.
-  save( name+"keypoints.png" );
-  //image(d[1], x_size, 0);
-  //image(d[2], 0, y_size);
-  //image(r, x_size, y_size);
+  save( name+".keypoints.png" );
+  image(r, x_size, 0);
+  image(d[1], 0, y_size);
+  image(d[2], x_size, y_size);
 }
  
 void draw() {
@@ -155,68 +162,106 @@ void SmoothWithGaussian(PImage in, PImage out, int m, float[][] Gauss)
 
 int max;
 
-void check_DoG(PImage r,PImage[] b){
-  int m = 1;
+void keypoint(PImage r,PImage[] b){
+  int max = 0;
+  int f = 0;
+  color tmp;
+  
   PImage[] s = new PImage[4];
   
   for(int i=0;i<s.length;i++) s[i] = r.get(0,0,r.width,r.height);  
-  color tmp;
-  int max = 0;
-  int f = 0;
-    //Max value
-    for(int y=0; y<b[0].height; y++) {
-      for(int x=0; x<b[0].width; x++) {
-        tmp = b[0].get(x,y);
-        max = 0;
-        for(int i=1;i<s.length;i++){
-          if(tmp < b[i].get(x,y)){
-             tmp = b[i].get(x,y);
-             max = i;
-          }
+  
+  //Max value
+  for(int y=0; y<y_size; y++) {
+    for(int x=0; x<x_size; x++) {
+      tmp = b[0].get(x,y);
+      max = 0;
+      for(int i=1;i<s.length;i++){
+        if(tmp < b[i].get(x,y)){
+           tmp = b[i].get(x,y);
+           max = i;
         }
-        s[max].set(x,y,tmp);
       }
+      s[max].set(x,y,tmp);
     }
-    
-    //extreme value
-    for(int Num=0;Num<2;Num++){
-      for(int y=m; y<y_size-m; y++) {
-        for(int x=m; x<x_size-m; x++) {
-          f = 0;
-          color p = s[Num+1].get(x,y);
-          for(int i=-1; i<2  && f==0; i++){
-            for(int j=-1; j<2 && f==0; j++){
-              for(int n=0; n<3 && f==0; n++){
-               if(p >= b[n+Num].get(x+j,y+i)){
-                  f = 1;
-               }
+  }
+  /*
+  for(int N=0;N<2;N++){
+    for(int y=1; y<y_size-1; y++) {
+      for(int x=1; x<x_size-1; x++) {
+        f = 0;
+        color p = s[N+1].get(x,y);
+        for(int i=-1; i<2  && f==0; i++){
+          for(int j=-1; j<2 && f==0; j++){
+            for(int n=0; n<3 && f==0; n++){
+              if(p >= b[n+N].get(x+j,y+i)){
+                f = 1;
               }
             }
           }
-          if(f == 0){    
-           if(Num == 0){
-             r.set(x,y,color(255,0,0));
-             stroke(255,0,0,70);
-             ellipse(x,y,5,5);
-             point(x,y);
-           }else{
-             r.set(x,y,color(0,255,0));
-             stroke(0,255,0,70);
-             ellipse(x,y,20,20);
-             point(x,y);
-           }
-          } 
         }
+        if(f == 0){    
+          if(N == 0){  //sigma = 1
+            
+          }else{       //sigma = 2
+            
+          }
+        } 
       }
     }
+  }
+  */
+  //Extreme value
+  for(int N=0;N<2;N++){
+    for(int y=1; y<y_size-1; y++) {
+      for(int x=1; x<x_size-1; x++) {
+        f = 0;
+        color p = s[N+1].get(x,y);
+        println(red(p));
+        for(int i=-1; i<2  && f==0; i++){
+          for(int j=-1; j<2 && f==0; j++){
+            for(int n=0; n<3 && f==0; n++){
+              if(p >= b[n+N].get(x+j,y+i)){
+                f = 1;
+              }
+            }
+          }
+        }
+        if(f == 0){    
+          if(N == 0){  //sigma = 1
+            r.set(x,y,color(255,0,0));
+          }else{       //sigma = 2
+            r.set(x,y,color(0,255,0));
+          }
+        } 
+      }
+    }
+  }
+  
 }
 
-void DoG(PImage r,PImage a,PImage b){
+void make_DoG(PImage r,PImage a,PImage b){
   color tmp;
   for(int y=0;y<a.height;y++){
     for(int x=0;x<a.width;x++){
       tmp = a.get(x,y) - b.get(x,y);
       r.set(x,y,tmp);
+    }
+  }
+}
+
+void make_scale(PImage r){
+  for(int y=0; y<y_size; y++) {
+    for(int x=0; x<x_size; x++) {
+      if(r.get(x,y) == color(255,0,0)){
+            stroke(sigma_1);
+            ellipse(x,y,scale_1,scale_1);
+            point(x,y);
+      }else if(r.get(x,y) == color(0,255,0)){
+            stroke(sigma_2);
+            ellipse(x,y,scale_2,scale_2);
+            point(x,y);
+      }
     }
   }
 }
@@ -230,6 +275,7 @@ void format(PImage[] r,color c){
     }
   }
 }
+
 void format(PImage r,color c){
   for(int i=0; i<r.height; i++){
     for(int j=0; j<r.width; j++){
