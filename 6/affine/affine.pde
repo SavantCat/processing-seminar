@@ -11,43 +11,49 @@ int selector = 0;
  
 //control points
 PVector[] points = new PVector[4];
-//float Start_points[3][3];
+//double Start_points[3][3];
 
-float test_pos[][] =  {
-                          {300.0,70.0},
-                          {470.0,240.0},
-                          {320.0,410.0},
-                          {140.0,240.0}
-                        };
-float set_pos[][];
-float get_pos[][];
+double start_pos[][];                     
+double set_pos[][];
+double get_pos[][];
+
+double[] con = new double[6];
 
 void setup() {
   size(1280, 480);
   cam = new Capture(this, 640, 480);
   cam.start();
- 
+  input = new PImage(640,480);
+  
   //initialize control point
   for(int i=0;i<4;i++) points[i] = new PVector(); 
-  /*
+  
   points[0].set(100, 100, 0);
   points[1].set(320, 100, 0);
   points[2].set(320, 240, 0);
   points[3].set(100, 240, 0);
-  */
-  points[0].set(300, 70, 0);
-  points[1].set(470, 240, 0);
-  points[2].set(320, 410, 0);
-  points[3].set(140, 240, 0);
   
-  set_pos = new float[][]{
+  start_pos = new double[2][4];
+for(int i=0;i<points.length;i++){
+  start_pos[0][i]=points[i].x;
+  start_pos[1][i]=points[i].y;
+}
+  
+  
+  
+  points[0].set(0, 0, 0);
+  points[1].set(639, 0, 0);
+  points[2].set(639, 479, 0);
+  points[3].set(0, 479, 0);
+  
+  set_pos = new double[][]{
     {0,0},
     {639,0},
     {639,479},
     {0,479}
   };
   
-  get_pos = new float[2][4];
+  get_pos = new double[2][4];
 
   println("=========================");
   for(int i=0;i<4;i++){
@@ -76,16 +82,44 @@ void draw() {
   for(int y=0;y<2;y++){
  //   println(get_pos[0][y]+" "+get_pos[1][y]);
 
-    ellipse(get_pos[0][y],get_pos[1][y],10,10);
+    ellipse((float)get_pos[0][y],(float)get_pos[1][y],10,10);
   }
-  // image(output,640,0);      // trasforme image 
+  
+  input.copy(cam,0,0,cam.width,cam.height,0,0,cam.width,cam.height);
+  
+  image(input,640,0,width,480);      // trasforme image 
 }
  
 // affine 
 PImage AffineTransforms(){
+PImage tmp = new PImage(640,480);
+PVector[] p = points;
+PVector affin_pos;
+
+for(int y=0;y<tmp.height;y++){
+  for(int x=0;x<tmp.width;x++){
+     pos_change(x,y);
+    tmp.set(x,y,color(0));
+  }
+}
+
+for(int y=0;y<cam.height;y++){
+  for(int x=0;x<cam.width;x++){
+    
+    //if((point[0].x == x && point[0].y == y)||(point[1].x == x && point[1].y == y)||(point[2].x == x && point[2].y == y)||(point[3].x == x && point[3].y == y)){
+     // if(prop(point[0],point[1],x,y)){
+       
+       affin_pos = pos_change(x,y);
+       if(0<=affin_pos.x && affin_pos.x <= (width/2) && 0<=affin_pos.y && affin_pos.y <= height){
+         tmp.set((int)affin_pos.x,(int)affin_pos.y,input.get(x,y));
+       }
+      }
+    }
  
 
- 
+input = tmp;
+  
+  
   return output;
 }
  
@@ -115,7 +149,7 @@ void mouseDragged(){
 void mouseReleased(){
   dragged = false;
  
-  println("=========================");
+  println("R========================");
   for(int i=0;i<4;i++){
     println("POINT " + i + " = " + "(" + points[i].x + ", " + points[i].y + ")");
   }
@@ -124,39 +158,42 @@ void mouseReleased(){
 }
 
 
-void change_affine(float s_data[][]){
+void change_affine(double s_data[][]){
   
-  float[] x = {
+  
+  double[] x = {
+    start_pos[0][0],start_pos[0][1],start_pos[0][2],start_pos[0][3]
+  };
+  double[] y = {
+    start_pos[1][0],start_pos[1][1],start_pos[1][2],start_pos[1][3]
+  };
+  
+  double[] x_s = {
     points[0].x,points[1].x,points[2].x,points[3].x
   };
-  float[] y = {
+  double[] y_s = {
     points[0].y,points[1].y,points[2].y,points[3].y
   };
-  float[] x_s = {
-    set_pos[0][0],set_pos[1][0],set_pos[2][0],set_pos[3][0]
-  };
-  float[] y_s = {
-    set_pos[0][1],set_pos[1][1],set_pos[2][1],set_pos[3][1]
-  };
-  float n = 4;
+
+  double n = 4;
   
-     float[][] a = {
-                   {sum(x,x),sum(x,y),sum(x)},
-                   {sum(x,y),sum(y,y),sum(y)},
-                   {sum(x),sum(y),n}
-                 };
-                 
+   double[][] a = {
+                 {sum(x,x),sum(x,y),sum(x)},
+                 {sum(x,y),sum(y,y),sum(y)},
+                 {sum(x),sum(y),n}
+               };
+               
     
                  
   for(int i=0;i<3;i++){
     print("a:");
     for(int t=0;t<3;t++){
-      print(a[t][i]+" ");
+      print(a[t][i]+"\t");
     }
     println();
   } 
                  
-   float[] b = {
+   double[] b = {
                     sum(x,x_s),
                     sum(y,x_s),
                     sum(x_s),
@@ -165,56 +202,51 @@ void change_affine(float s_data[][]){
                     sum(y_s)
                  };
                  
-println();
-    for(int t=0;t<6;t++){
-      println(b[t]+" ");
-    }
-  println();
- a = inverse_3(a);
- println();
-  for(int i=0;i<3;i++){
-    print("inverse:");
-    for(int t=0;t<3;t++){
-      print(a[t][i]+" ");
-    }
     println();
-  } 
-  
-  float[] r = new float[6];
+    for(int t=0;t<6;t++){
+      println(t+":"+b[t]);
+    }
+    
+   a = inverse_3(a);
+
   for(int i=0;i<3;i++){
     for(int t=0;t<3;t++){
-      r[i] += a[t][i] * b[t];
+      con[i] += a[t][i] * b[t];
     }
   }
   for(int i=3;i<6;i++){
     for(int t=0;t<3;t++){
-      r[i] += a[t][i-3] * b[t+3];
+      con[i] += a[t][i-3] * b[t+3];
     }
   }
-  
-  for(int i=0;i<r.length;i++){
-    println(i+":"+r[i]);
+  for(int i=0;i<con.length;i++){
+    println(i+":"+con[i]);
   }
+  println("");
   
-  float X,Y;
+  
+  double X,Y;
   for(int N=0;N<4;N++){
-  
-  X = (r[0]*x[N]+r[1]*y[N])+r[4];
-  Y = (r[2]*x[N]+r[3]*y[N])+r[5];
-  
-  get_pos[0][N] = X;get_pos[1][N] = Y;
- 
-   
+    
+    /*
+    |r[0] r[1]| |r[2]|
+    |r[3] r[4]| |r[5]|
+    */  
+      
+    X = (con[0]*x[N]+con[1]*y[N])+con[4];
+    Y = (con[2]*x[N]+con[3]*y[N])+con[5];
+    
+    get_pos[0][N] = X; get_pos[1][N] = Y;
   }
    
   for(int yy=0;yy<4;yy++){
     println(get_pos[0][yy]+" "+get_pos[1][yy]);
-    ellipse(get_pos[0][yy],get_pos[0][yy],10,10);
+    ellipse((float)get_pos[0][yy],(float)get_pos[0][yy],10,10);
   }
 }
 
-float[][] inverse_3(float data[][]){
-  float deta = 0;
+double[][] inverse_3(double data[][]){
+  double deta = 0;
 
   deta = data[0][0]*data[1][1]*data[2][2]+
           data[0][1]*data[1][2]*data[2][0]+
@@ -222,63 +254,74 @@ float[][] inverse_3(float data[][]){
               data[0][0]*data[1][2]*data[2][1]-
                 data[0][2]*data[1][1]*data[2][0]-
                   data[0][1]*data[1][0]*data[2][2];
-  
-  println("A:"+((data[2][0]*data[1][2]) - (data[1][0]*data[2][2])/deta));
-  println("21:"+((data[2][0]*data[1][2]) - (data[1][0]*data[2][2])/deta));
- float[][] tmp_001 = {
+ double[][] tmp_001 = {
                        {(data[1][1]*data[2][2]) - (data[2][1]*data[1][2]),(data[2][0]*data[1][2]) - (data[1][0]*data[2][2]),(data[1][0]*data[2][1]) - (data[2][1]*data[1][1])},
                        {(data[2][1]*data[0][2]) - (data[0][1]*data[2][2]),(data[0][0]*data[2][2]) - (data[2][0]*data[0][2]),(data[2][0]*data[0][1]) - (data[0][0]*data[2][1])},   
                        {(data[0][1]*data[1][2]) - (data[1][1]*data[0][2]),(data[1][0]*data[0][2]) - (data[0][0]*data[1][2]),(data[0][0]*data[1][1]) - (data[1][0]*data[0][1])}
                      };
       
-/*
-float[][] tmp_001 = new float[3][3];
-      tmp_001 = {
-        {(data[1][1]*data[2][2]) - (data[2][1]*data[1][2]),(data[2][0]*data[1][2]) - (data[1][0]*data[2][2]),(data[1][0]*data[2][1]) - (data[2][1]*data[1][1])},
-        {(data[2][1]*data[0][2]) - (data[0][1]*data[2][2]),(data[0][0]*data[2][2]) - (data[2][0]*data[0][2]),(data[2][0]*data[0][1]) - (data[0][0]*data[2][1])},   
-        {(data[0][1]*data[1][2]) - (data[1][1]*data[0][2]),(data[1][0]*data[0][2]) - (data[0][0]*data[1][2]),(data[0][0]*data[1][1]) - (data[1][0]*data[0][1])}
-      };
-        */             
-  
-  println(tmp_001[0][2]);
-  println(((data[0][1]*data[1][2]) - (data[1][1]*data[0][2])));
-                     
-  float[][] result = new float[3][3]; 
+  double[][] result = new double[3][3]; 
   
   for(int y=0;y<3;y++){
       for(int x=0;x<3;x++){
          result[x][y] = tmp_001[x][y] / deta ;
       }
   }
-result[0][2] = (data[0][1]*data[1][2] - data[1][1]*data[0][2])/deta;
- println();
-  for(int i=0;i<3;i++){
-    print("inverse_in:");
-    for(int t=0;t<3;t++){
-      print(result[t][i]+":");
-    }
-    println();
-  } 
   
+  println();
+  for(int i=0;i<3;i++){
+    print("inverse:");
+    for(int t=0;t<3;t++){
+      print(result[t][i]+"\t");
+    }
+  
+  } 
+  println();
  return result;
  }
 
-float sum(float[] x){
-  float tmp = 0;
+double sum(double[] x){
+  double tmp = 0;
   for(int i=0;i<x.length;i++){
     tmp += x[i];
   }
   return tmp;
 }
 
-float sum(float[] x1,float[] x2){
-  float tmp = 0;
+double sum(double[] x1,double[] x2){
+  double tmp = 0;
   for(int i=0;i<x1.length;i++){
     tmp += x1[i]*x2[i];
   }
   return tmp;
 }
 
+boolean prop(PVector p1,PVector p2,double x,double y){
+  double a,b;
+  
+   a = (p2.y - p1.y)/(p2.x - p1.x);
+   b = a*p1.x - p1.y;
+   
+   if(y == a*x+b){
+       return true;
+     }else{
+       return false;
+     }
+  
+}
+
+PVector pos_change(int p_x,int p_y){
+ PVector tmp;
+ double x,y;
+ 
+ x = con[0]*p_x+con[1]*p_y+con[4];
+ y = con[2]*p_x+con[3]*p_y+con[5];
+ 
+ tmp = new PVector((float)x,(float)y,0);
+ 
+ return tmp;
+ 
+}
 
 
 
