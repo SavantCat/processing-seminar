@@ -291,10 +291,9 @@ for(int j=0;j<input.height ;j++){
 
 tmp_v = pos_change(j,i);
 
-if(0<=tmp_v.x && tmp_v.x<640 && 0<=tmp_v.y && 480 < tmp_v.y){
-
+if((0<=tmp_v.x && tmp_v.x<640) && (0<=tmp_v.y && tmp_v.y<480)){
+println(tmp_v);
 output.set((int)tmp_v.x,(int)tmp_v.y,input.get(i,j));
-
 }
 }
 }
@@ -374,7 +373,7 @@ x = con[0]*p_x+con[1]*p_y+con[4];
 y = con[2]*p_x+con[3]*p_y+con[5];
 
 tmp = new PVector((float)x,(float)y,0);
-
+println(tmp);
 return tmp;
 
 }
